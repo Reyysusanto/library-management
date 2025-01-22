@@ -14,11 +14,14 @@ datasource db {
 }
 
 model Mahasiswa {
-  nim      Int          @id @default(autoincrement())
+  nim      String       @id @db.Char(9)
   nama     String       @db.VarChar(60)
   email    String       @db.VarChar(70)
   password String       @db.VarChar(50)
+  token    String?      @db.VarChar(100)
   borrowed PinjamBuku[]
+
+  @@map("mahasiswa")
 }
 
 model Buku {
@@ -28,17 +31,21 @@ model Buku {
   isbn     String       @unique @db.VarChar(13)
   status   BookStatus   @default(available)
   borrowed PinjamBuku[]
+
+  @@map("buku")
 }
 
 model PinjamBuku {
   id         Int       @id @default(autoincrement())
-  MhsId      Int
+  MhsId      String    @db.Char(9)
   BukuId     Int
   borrowedAt DateTime  @default(now())
   returnAt   DateTime?
 
   mhs  Mahasiswa @relation(fields: [MhsId], references: [nim])
   buku Buku      @relation(fields: [BukuId], references: [id])
+
+  @@map("pinjam")
 }
 
 enum BookStatus {
