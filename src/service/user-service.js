@@ -1,3 +1,4 @@
+import { request } from "http";
 import { prismaClient } from "../application/database.js"
 import { ResponseError } from "../error/response-error.js"
 import { registerUserValidation } from "../validation/user-validation.js"
@@ -27,4 +28,29 @@ const register = async (request) => {
     })
 }
 
-export default { register }
+const login = async (request) => {
+    const user = validate(loginUserValidation, request)
+
+    const userData = await prismaClient.mahasiswa.findUnique({
+        where: {
+            email: user.email
+        }
+    })
+
+    if(!userData) {
+        throw new ResponseError(400, "Email atau password salah")
+    }
+
+    const isPasswordMatch = await bcrypt.compare(user.password, userData.password)
+
+    if(!isPasswordMatch) {
+        throw new ResponseError(400, "Email atau password salah")
+    }
+
+    return {
+        nim: userData.nim,
+        nama: userData.nama
+    }
+}
+
+export default { register, login }
