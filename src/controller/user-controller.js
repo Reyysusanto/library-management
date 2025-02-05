@@ -22,4 +22,16 @@ const login = async (req, res, next) => {
     }
 }
 
-export default { register, login }
+const get = async (req, res, next) => {
+    try{
+        const nim = req.mahasiswa.nim;
+        const result = await userService.get(nim);
+        res.status(200).json({
+            data: result,
+        });
+    } catch(err) {
+        next(err)
+    }
+}
+
+export default { register, login, get }

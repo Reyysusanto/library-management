@@ -1,7 +1,7 @@
 import { request } from "http";
 import { prismaClient } from "../application/database.js"
 import { ResponseError } from "../error/response-error.js"
-import { registerUserValidation } from "../validation/user-validation.js"
+import { getUserValidation, registerUserValidation } from "../validation/user-validation.js"
 import bcrypt from "bcrypt";
 
 const register = async (request) => {
@@ -34,6 +34,10 @@ const login = async (request) => {
     const userData = await prismaClient.mahasiswa.findUnique({
         where: {
             email: user.email
+        }, 
+        select: {
+            email: true,
+            password: true
         }
     })
 
@@ -47,10 +51,38 @@ const login = async (request) => {
         throw new ResponseError(400, "Email atau password salah")
     }
 
-    return {
-        nim: userData.nim,
-        nama: userData.nama
-    }
+    const token = uuid().toString()
+    return prismaClient.mahasiswa.update({
+        data: {
+            token: token
+        },
+        where: {
+            email: userData.email
+        },
+        select: {
+            token: true
+        }
+    })
 }
 
-export default { register, login }
+const get = async (nim) => {
+    nim = validate(getUserValidation, nim)
+
+    const user = await prismaClient.mahasiswa.findUnique({
+        where: {
+            nim: nim
+        },
+        select: {
+            nim: true,
+            nama: true
+        }
+    })
+
+    if(!user) {
+        throw new ResponseError(404, "User not found")
+    }
+
+    return user
+}
+
+export default { register, login, get }
