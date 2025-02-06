@@ -34,4 +34,19 @@ const get = async (req, res, next) => {
     }
 }
 
-export default { register, login, get }
+const update = async (req, res, next) => {
+    try{
+        const nim = req.user.nim
+        const request = req.body
+        request.nim = nim
+
+        const result = await userService.update(request)
+        res.status(200).json({
+        data: result
+        })
+    } catch(err) {
+    next(err)
+  }
+}
+
+export default { register, login, get, update }

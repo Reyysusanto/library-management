@@ -1,7 +1,7 @@
 import { request } from "http";
 import { prismaClient } from "../application/database.js"
 import { ResponseError } from "../error/response-error.js"
-import { getUserValidation, registerUserValidation } from "../validation/user-validation.js"
+import { getUserValidation, registerUserValidation, updateUserValidation } from "../validation/user-validation.js"
 import bcrypt from "bcrypt";
 
 const register = async (request) => {
@@ -85,4 +85,35 @@ const get = async (nim) => {
     return user
 }
 
-export default { register, login, get }
+const update = async (request) => {
+    const user = validate(updateUserValidation, request)
+
+    const totalUser = await prismaClient.mahasiswa.count({
+        where: {
+            nim: user.nim
+        }
+    })
+
+    if(totalUser !== 1){
+        throw new ResponseError(404, "User is not found")
+    }
+
+    const data = {}
+
+    if(user.password) {
+        data.password = await bcrypt.hash(user.password, 10)
+    }
+
+    return prismaClient.mahasiswa.update({
+        where: {
+            nim: user.nim
+        },
+        data: data,
+        select: {
+            nim: true,
+            nama: true
+        }
+    })
+}
+
+export default { register, login, get, update }
